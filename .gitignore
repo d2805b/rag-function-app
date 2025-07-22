@@ -1,0 +1,60 @@
+# VS/CS系（不要であれば削除してOK）
+bin
+obj
+csx
+.vs
+edge
+Publish
+
+*.user
+*.suo
+*.cscfg
+*.Cache
+project.lock.json
+
+/packages
+/TestResults
+
+/tools/NuGet.exe
+/App_Data
+/secrets
+/data
+.secrets
+appsettings.json
+local.settings.json
+
+# Node.js 系（必要な場合のみ残す）
+node_modules/
+dist/
+
+# Python 関連
+.python_packages/
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Pyキャッシュ類
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Azurite (Azureのローカルエミュレータ用)
+__blobstorage__/
+__queuestorage__/
+__azurite_db*__.json
+
+# Azure Functions GitHub デプロイ用の追加ポイント
+# 不要ファイル
+*.zip
+*.log
+
+# VSCode 設定ファイル（不要であれば）
+.vscode/
+
+# OS固有ファイル
+.DS_Store
+Thumbs.db
