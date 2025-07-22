@@ -28,15 +28,13 @@ jobs:
         run: |
           zip -r release.zip . -x "venv/*" ".git/*" ".github/*"
 
-      - name: Azure Login (with Service Principal)
+      - name: Azure Login
         uses: azure/login@v1
         with:
-          client-id: ${{ secrets.AZURE_CLIENT_ID }}
-          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-          client-secret: ${{ secrets.AZURE_CLIENT_SECRET }}
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
       - name: Deploy to Azure Function App
         uses: Azure/functions-action@v1
         with:
-          app-name: 'rag-function1'  # Azureポータルでの Function App 名
+          app-name: 'rag-function1'
           package: 'release.zip'
