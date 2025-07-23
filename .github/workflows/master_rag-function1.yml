@@ -19,14 +19,15 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install dependencies into .python_packages
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          mkdir -p .python_packages/lib/site-packages
+          pip install -r requirements.txt --target=.python_packages/lib/site-packages
 
-      - name: Zip entire project for deployment
+      - name: Create zip for deployment (includes .python_packages)
         run: |
-          zip -r release.zip . -x "venv/*" ".git/*" ".github/*"
+          zip -r release.zip . -x "*.git*" ".github*" "venv/*" "__pycache__*" "*.pyc" "*.pyo"
 
       - name: Azure Login
         uses: azure/login@v1
