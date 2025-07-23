@@ -1,4 +1,3 @@
-
 import azure.functions as func
 import logging
 import json
@@ -6,13 +5,11 @@ import os
 import openai
 import requests
 
-app = func.FunctionApp()
-
 # Azure OpenAI の設定
 openai.api_type = "azure"
 openai.api_base = os.environ["AZURE_OPENAI_ENDPOINT"]
 openai.api_key = os.environ["AZURE_OPENAI_API_KEY"]
-openai.api_version = "2024-02-15-preview"  # 必要に応じて調整
+openai.api_version = "2024-02-15-preview"
 deployment_name = os.environ["AZURE_OPENAI_DEPLOYMENT"]
 
 # Azure Search の設定
@@ -20,7 +17,6 @@ search_endpoint = os.environ["AZURE_SEARCH_ENDPOINT"]
 search_key = os.environ["AZURE_SEARCH_KEY"]
 search_index = os.environ["AZURE_SEARCH_INDEX_NAME"]
 
-@app.route(route="main", auth_level=func.AuthLevel.ANONYMOUS)
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('RAGチャット関数が呼び出されました')
 
@@ -61,7 +57,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
 
         response = client.chat.completions.create(
-            model=deployment_name,  # デプロイ名を指定
+            model=deployment_name,
             messages=[
                 {"role": "system", "content": "以下の情報に基づいて..."},
                 {"role": "user", "content": f"質問: {question}\n\n参照情報:\n{context}"}
