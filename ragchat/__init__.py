@@ -79,7 +79,7 @@ def ragchat(req: func.HttpRequest) -> func.HttpResponse:
         )
 
     except Exception as e:
-        logging.error(f"エラーが発生しました: {e}")
+        logging.error("エラーが発生しました", exc_info=True)
         return func.HttpResponse(
             json.dumps({"error": str(e)}),
             mimetype="application/json",
