@@ -21,7 +21,7 @@ search_key = os.environ["AZURE_SEARCH_KEY"]
 search_index = os.environ["AZURE_SEARCH_INDEX_NAME"]
 
 @app.route(route="main", auth_level=func.AuthLevel.ANONYMOUS)
-def ragchat(req: func.HttpRequest) -> func.HttpResponse:
+def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('RAGチャット関数が呼び出されました')
 
     try:
