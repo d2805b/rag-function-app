@@ -23,11 +23,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         req_body = req.get_json()
         question = req_body.get("question")
-
         if not question:
             raise ValueError("質問（question）がリクエストに含まれていません")
 
-        # Azure Cognitive Search で検索
+        # Cognitive Search で検索
         search_url = f"{search_endpoint}/indexes/{search_index}/docs/search?api-version=2023-07-01-preview"
         headers = {
             "Content-Type": "application/json",
@@ -40,47 +39,43 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         search_response = requests.post(search_url, headers=headers, json=payload)
         results = search_response.json()
 
-        # 検索結果の整形
-        sources = []
-        context_parts = []
+        context_list = []
+        source_list = []
+
         for doc in results.get("value", []):
             score = doc.get("@search.score", 0)
+            file_name = doc.get("metadata_storage_name", "unknown")
             content = doc.get("content", "")
-            filename = doc.get("metadata_storage_name", "N/A")
-            sources.append({
+            context_list.append(f"[{file_name}] {content}")
+            source_list.append({
                 "score": round(score, 2),
-                "content": content[:200],  # 長すぎないよう切り取り（必要に応じて調整）
-                "source": filename
+                "source": file_name
             })
-            context_parts.append(f"[スコア: {score:.2f}] {content}")
 
-        context = "\n\n".join(context_parts)
+        combined_context = "\n\n".join(context_list)
 
-        # OpenAI に質問
+        # OpenAI に問い合わせ
         from openai import AzureOpenAI
-
         client = AzureOpenAI(
             api_key=os.environ["AZURE_OPENAI_API_KEY"],
             api_version="2024-02-15-preview",
             azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"]
         )
-
         response = client.chat.completions.create(
             model=deployment_name,
             messages=[
-                {"role": "system", "content": "次の情報をもとに質問に答えてください。信頼できないことは答えず、『わかりません』と答えてください。"},
-                {"role": "user", "content": f"質問: {question}\n\n参照情報:\n{context}"}
+                {"role": "system", "content": "以下の情報をもとにユーザーの質問に回答してください。"},
+                {"role": "user", "content": f"質問: {question}\n\n参照情報:\n{combined_context}"}
             ],
             temperature=0.3,
             max_tokens=800
         )
-
         answer = response.choices[0].message.content
 
         return func.HttpResponse(
             json.dumps({
                 "answer": answer,
-                "sources": sources
+                "sources": source_list
             }, ensure_ascii=False),
             mimetype="application/json",
             status_code=200
@@ -89,7 +84,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     except Exception as e:
         logging.error("エラーが発生しました", exc_info=True)
         return func.HttpResponse(
-            json.dumps({"error": str(e)}),
+            json.dumps({"error": str(e)}, ensure_ascii=False),
             mimetype="application/json",
             status_code=500
         )
