@@ -40,12 +40,21 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         search_response = requests.post(search_url, headers=headers, json=payload)
         results = search_response.json()
 
-        # 検索結果を整形
-        context_texts = [
-            (doc["@search.score"], doc["content"] if "content" in doc else str(doc))
-            for doc in results.get("value", [])
-        ]
-        context = "\n".join([f"[スコア: {score:.2f}] {text}" for score, text in context_texts])
+        # 検索結果の整形
+        sources = []
+        context_parts = []
+        for doc in results.get("value", []):
+            score = doc.get("@search.score", 0)
+            content = doc.get("content", "")
+            filename = doc.get("metadata_storage_name", "N/A")
+            sources.append({
+                "score": round(score, 2),
+                "content": content[:200],  # 長すぎないよう切り取り（必要に応じて調整）
+                "source": filename
+            })
+            context_parts.append(f"[スコア: {score:.2f}] {content}")
+
+        context = "\n\n".join(context_parts)
 
         # OpenAI に質問
         from openai import AzureOpenAI
@@ -59,7 +68,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         response = client.chat.completions.create(
             model=deployment_name,
             messages=[
-                {"role": "system", "content": "以下の情報に基づいて..."},
+                {"role": "system", "content": "次の情報をもとに質問に答えてください。信頼できないことは答えず、『わかりません』と答えてください。"},
                 {"role": "user", "content": f"質問: {question}\n\n参照情報:\n{context}"}
             ],
             temperature=0.3,
@@ -69,7 +78,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         answer = response.choices[0].message.content
 
         return func.HttpResponse(
-            json.dumps({"answer": answer}),
+            json.dumps({
+                "answer": answer,
+                "sources": sources
+            }, ensure_ascii=False),
             mimetype="application/json",
             status_code=200
         )
