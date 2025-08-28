@@ -81,7 +81,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 },
                 {"role": "user", "content": f"質問: {question}\n\n参照情報:\n{combined_context}"}
             ],
-            temperature=0.3,
+            temperature=0.7,
             max_tokens=800
         )
         answer = (response.choices[0].message.content or "").strip()
